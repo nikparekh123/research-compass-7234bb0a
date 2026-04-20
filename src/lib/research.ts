@@ -95,13 +95,13 @@ export const VIEWS: { k: ViewKey; label: string; count: number | null }[] = [
   { k: "starred", label: "Starred",   count: 12 },
 ];
 
-export interface Group {
+export interface Group<T extends Report = Report> {
   key: string;
   title: string | null;
-  items: Report[];
+  items: T[];
 }
 
-export function groupRows(rows: Report[], view: ViewKey): Group[] {
+export function groupRows<T extends Report>(rows: T[], view: ViewKey): Group<T>[] {
   if (view === "latest") return [{ key: "_", title: null, items: rows }];
   if (view === "starred") return [{ key: "starred", title: null, items: rows.filter((r) => r.star) }];
   if (view === "sector") {
