@@ -122,3 +122,110 @@ export function groupRows(rows: Report[], view: ViewKey): Group[] {
   }
   return [{ key: "_", title: null, items: rows }];
 }
+
+// ---------- Supabase mapping ----------
+import { supabase } from "@/integrations/supabase/client";
+
+type DbReport = {
+  id: string;
+  title: string;
+  tickers: string[] | null;
+  report_type: string;
+  primary_sector: string | null;
+  sectors: string[] | null;
+  author: string | null;
+  published_at: string | null;
+  read_minutes: number | null;
+  tags: string[] | null;
+  summary: string | null;
+  visibility: string;
+  file_path: string | null;
+  starred: boolean;
+  created_at: string;
+};
+
+const sectorKeyFromLabel = (s?: string | null): SectorKey => {
+  const v = (s || "").toLowerCase();
+  if (v.startsWith("tech")) return "tech";
+  if (v.startsWith("energ")) return "energy";
+  if (v.startsWith("financ") || v === "fin") return "fin";
+  if (v.startsWith("health") || v === "hlth") return "hlth";
+  if (v.startsWith("macro")) return "macro";
+  if (v.startsWith("indu")) return "indu";
+  if (v.startsWith("stap") || v === "stpl") return "stpl";
+  return "tech";
+};
+
+const formatShortDate = (iso: string | null): string => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleString("en-US", { month: "short", day: "numeric" });
+};
+
+export interface ReportRow extends Report {
+  id: string;
+}
+
+export function dbToReport(r: DbReport): ReportRow {
+  const typ = (["single", "macro", "theme", "earn"].includes(r.report_type) ? r.report_type : "single") as ReportType;
+  const sec = sectorKeyFromLabel(r.primary_sector);
+  return {
+    id: r.id,
+    d: formatShortDate(r.published_at || r.created_at),
+    tickers: r.tickers || [],
+    typ,
+    sec,
+    sectors: r.sectors && r.sectors.length ? r.sectors : [secLabel[sec]],
+    title: r.title,
+    author: r.author || "—",
+    read: (r.read_minutes ?? 10) + "m",
+    star: !!r.starred,
+    fresh: "read",
+    tags: r.tags || [],
+    summary: r.summary || "",
+    visibility: (["Team", "Firm-wide", "Private"].includes(r.visibility) ? r.visibility : "Team") as Visibility,
+  };
+}
+
+export async function fetchReports(): Promise<ReportRow[]> {
+  const { data, error } = await supabase
+    .from("reports")
+    .select("*")
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data as DbReport[]).map(dbToReport);
+}
+
+const SEED_AUTHOR_DATES: Record<string, string> = {
+  "Apr 18": "2026-04-18", "Apr 17": "2026-04-17", "Apr 16": "2026-04-16",
+  "Apr 15": "2026-04-15", "Apr 14": "2026-04-14", "Apr 11": "2026-04-11", "Apr 10": "2026-04-10",
+};
+
+export async function seedReportsIfEmpty(): Promise<boolean> {
+  const { count, error } = await supabase
+    .from("reports")
+    .select("id", { count: "exact", head: true });
+  if (error) throw error;
+  if ((count ?? 0) > 0) return false;
+
+  const rows = SEED_REPORTS.map((r) => ({
+    title: r.title,
+    tickers: r.tickers,
+    report_type: r.typ,
+    primary_sector: secLabel[r.sec],
+    sectors: r.sectors,
+    author: r.author,
+    published_at: SEED_AUTHOR_DATES[r.d] || new Date().toISOString().slice(0, 10),
+    read_minutes: parseInt(r.read, 10) || 10,
+    tags: r.tags,
+    summary: r.summary,
+    visibility: r.visibility,
+    starred: r.star,
+  }));
+  const { error: insErr } = await supabase.from("reports").insert(rows);
+  if (insErr) throw insErr;
+  return true;
+}
+
