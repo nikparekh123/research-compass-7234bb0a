@@ -42,7 +42,7 @@ const seed = (r: Omit<Report, "sectors" | "tags" | "summary" | "visibility">): R
   ...r, sectors: [secLabel[r.sec]], tags: [], summary: "", visibility: "Team",
 });
 
-export const REPORTS: Report[] = [
+export const SEED_REPORTS: Report[] = [
   seed({ d: "Apr 18", tickers: ["AAPL"], typ: "single", sec: "tech",   title: "Apple — services margin expansion vs. HW cycle drag",        author: "M. Chen", read: "12m", star: true,  fresh: "new" }),
   seed({ d: "Apr 18", tickers: [],       typ: "macro",  sec: "macro",  title: "Fed balance sheet runoff — tapering the taper",              author: "R. Park", read: "8m",  star: false, fresh: "new" }),
   seed({ d: "Apr 18", tickers: ["XOM"],  typ: "single", sec: "energy", title: "Exxon — Permian capex discipline into Q2",                   author: "L. Díaz", read: "14m", star: true,  fresh: "new" }),
