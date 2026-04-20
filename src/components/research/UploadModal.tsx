@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import type { Report, ReportType, SectorKey, Visibility } from "@/lib/research";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import type { ReportType, Visibility } from "@/lib/research";
 
 const UP_SECTORS = [
   "Technology", "Energy", "Financials", "Healthcare", "Macro",
@@ -15,7 +17,7 @@ const UP_TYPES: { k: ReportType; label: string; hint: string }[] = [
 const UP_VIS: Visibility[] = ["Team", "Firm-wide", "Private"];
 
 type Stage = "empty" | "ready";
-interface FileInfo { name: string; size: number }
+interface FileInfo { name: string; size: number; file: File }
 
 interface DropzoneProps {
   file: FileInfo | null;
@@ -32,7 +34,7 @@ function Dropzone({ file, setFile, stage, setStage }: DropzoneProps) {
     if (!f) return;
     const isHtml = /\.html?$/i.test(f.name) || f.type === "text/html";
     if (!isHtml) return;
-    setFile({ name: f.name, size: f.size });
+    setFile({ name: f.name, size: f.size, file: f });
     setStage("ready");
   };
 
@@ -79,10 +81,10 @@ function Dropzone({ file, setFile, stage, setStage }: DropzoneProps) {
 interface UploadModalProps {
   open: boolean;
   onClose: () => void;
-  onPublish: (r: Report) => void;
+  onPublished: () => void;
 }
 
-export default function UploadModal({ open, onClose, onPublish }: UploadModalProps) {
+export default function UploadModal({ open, onClose, onPublished }: UploadModalProps) {
   const [file, setFile] = useState<FileInfo | null>(null);
   const [stage, setStage] = useState<Stage>("empty");
   const [title, setTitle] = useState("");
@@ -98,6 +100,7 @@ export default function UploadModal({ open, onClose, onPublish }: UploadModalPro
   const [addToWatch, setAddToWatch] = useState(true);
   const [notify, setNotify] = useState(true);
   const [summary, setSummary] = useState("");
+  const [publishing, setPublishing] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -142,14 +145,44 @@ export default function UploadModal({ open, onClose, onPublish }: UploadModalPro
     setTagDraft("");
   };
 
-  const sectorToKey = (s?: string): SectorKey => {
-    const v = (s || "").toLowerCase();
-    if (v.startsWith("tech")) return "tech";
-    if (v.startsWith("energ")) return "energy";
-    if (v.startsWith("financ")) return "fin";
-    if (v.startsWith("health")) return "hlth";
-    if (v.startsWith("macro")) return "macro";
-    return "tech";
+  const handlePublish = async () => {
+    if (!file || !canPublish) return;
+    setPublishing(true);
+    try {
+      const ext = (file.name.match(/\.html?$/i)?.[0] || ".html").toLowerCase();
+      const path = `${crypto.randomUUID()}${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("reports")
+        .upload(path, file.file, { contentType: "text/html", upsert: false });
+      if (upErr) throw upErr;
+
+      const readMin = Math.max(3, Math.round((summary.length + 200) / 40));
+      const { error: insErr } = await supabase.from("reports").insert({
+        title: title.trim(),
+        tickers,
+        report_type: rtype,
+        primary_sector: sectors[0] ?? null,
+        sectors,
+        author,
+        published_at: pubDate,
+        read_minutes: readMin,
+        tags,
+        summary,
+        visibility: vis,
+        file_path: path,
+        starred: false,
+      });
+      if (insErr) throw insErr;
+
+      toast.success("Report published");
+      onPublished();
+      onClose();
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to publish report");
+    } finally {
+      setPublishing(false);
+    }
   };
 
   return (
@@ -328,27 +361,10 @@ export default function UploadModal({ open, onClose, onPublish }: UploadModalPro
           <button className="up-btn tinted" disabled={!file}>Save draft</button>
           <button
             className="up-btn primary"
-            disabled={!canPublish}
-            onClick={() => {
-              onPublish({
-                d: new Date(pubDate).toLocaleString("en-US", { month: "short", day: "numeric" }),
-                tickers,
-                typ: rtype,
-                sec: sectorToKey(sectors[0]),
-                sectors,
-                title,
-                author,
-                read: Math.max(3, Math.round((summary.length + 200) / 40)) + "m",
-                star: false,
-                fresh: "new",
-                tags,
-                summary,
-                visibility: vis,
-              });
-              onClose();
-            }}
+            disabled={!canPublish || publishing}
+            onClick={handlePublish}
           >
-            ✓ Publish report
+            {publishing ? "Publishing…" : "✓ Publish report"}
           </button>
         </div>
       </div>
