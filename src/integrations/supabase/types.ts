@@ -14,7 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      reports: {
+        Row: {
+          author: string | null
+          created_at: string
+          file_path: string | null
+          id: string
+          primary_sector: string | null
+          published_at: string | null
+          read_minutes: number | null
+          report_type: string
+          sectors: string[] | null
+          starred: boolean
+          summary: string | null
+          tags: string[] | null
+          tickers: string[] | null
+          title: string
+          visibility: string
+        }
+        Insert: {
+          author?: string | null
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          primary_sector?: string | null
+          published_at?: string | null
+          read_minutes?: number | null
+          report_type: string
+          sectors?: string[] | null
+          starred?: boolean
+          summary?: string | null
+          tags?: string[] | null
+          tickers?: string[] | null
+          title: string
+          visibility?: string
+        }
+        Update: {
+          author?: string | null
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          primary_sector?: string | null
+          published_at?: string | null
+          read_minutes?: number | null
+          report_type?: string
+          sectors?: string[] | null
+          starred?: boolean
+          summary?: string | null
+          tags?: string[] | null
+          tickers?: string[] | null
+          title?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
