@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  REPORTS, SECTORS, TYPES, RECENCY, VIEWS,
-  typeLabel, groupRows,
-  type Report, type ReportType, type SectorKey, type ViewKey,
+  SECTORS, TYPES, RECENCY, VIEWS,
+  typeLabel, groupRows, fetchReports, seedReportsIfEmpty,
+  type ReportRow, type ReportType, type SectorKey, type ViewKey,
 } from "@/lib/research";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import UploadModal from "@/components/research/UploadModal";
 
 function Brand() {
@@ -110,7 +113,7 @@ function ViewSwitcher({ view, setView }: { view: ViewKey; setView: (v: ViewKey) 
   );
 }
 
-function Row({ r, onStar }: { r: Report; onStar: () => void }) {
+function Row({ r, onStar }: { r: ReportRow; onStar: () => void }) {
   const primary = r.tickers[0] ?? "—";
   const dash = primary === "—";
   return (
@@ -202,10 +205,19 @@ export default function Index() {
   const [recency, setRecency] = useState("7d");
   const [starredOnly, setStarredOnly] = useState(false);
   const [unreadOnly, setUnreadOnly] = useState(false);
-  const [rows, setRows] = useState<Report[]>(REPORTS);
   const [uploadOpen, setUploadOpen] = useState(false);
 
+  const queryClient = useQueryClient();
+
   useEffect(() => { localStorage.setItem("rh-view", view); }, [view]);
+
+  const { data: rows = [] } = useQuery({
+    queryKey: ["reports"],
+    queryFn: async () => {
+      await seedReportsIfEmpty().catch((e) => console.error("seed failed", e));
+      return fetchReports();
+    },
+  });
 
   const filtered = useMemo(
     () =>
@@ -222,8 +234,15 @@ export default function Index() {
   const groups = useMemo(() => groupRows(filtered, view), [filtered, view]);
   const shownCount = groups.reduce((a, g) => a + g.items.length, 0);
 
-  const toggleStar = (idx: number) => {
-    setRows((rs) => rs.map((r, i) => (i === idx ? { ...r, star: !r.star } : r)));
+  const toggleStar = async (id: string, current: boolean) => {
+    queryClient.setQueryData<ReportRow[]>(["reports"], (old) =>
+      (old || []).map((r) => (r.id === id ? { ...r, star: !current } : r)),
+    );
+    const { error } = await supabase.from("reports").update({ starred: !current }).eq("id", id);
+    if (error) {
+      toast.error("Failed to update star");
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+    }
   };
 
   useEffect(() => {
@@ -270,10 +289,9 @@ export default function Index() {
                   <button className="grp-action">▾ Collapse</button>
                 </div>
               )}
-              {g.items.map((r, i) => {
-                const realIdx = rows.indexOf(r);
-                return <Row key={g.key + "-" + i} r={r} onStar={() => toggleStar(realIdx)} />;
-              })}
+              {g.items.map((r, i) => (
+                <Row key={g.key + "-" + (r.id || i)} r={r} onStar={() => toggleStar(r.id, r.star)} />
+              ))}
             </div>
           ))}
 
@@ -290,7 +308,7 @@ export default function Index() {
       <UploadModal
         open={uploadOpen}
         onClose={() => setUploadOpen(false)}
-        onPublish={(r) => setRows((rs) => [r, ...rs])}
+        onPublished={() => queryClient.invalidateQueries({ queryKey: ["reports"] })}
       />
 
       <div className="foot">
@@ -300,7 +318,7 @@ export default function Index() {
         <span><kbd>1–5</kbd>switch view</span>
         <span><kbd>/</kbd>search</span>
         <span className="spacer" />
-        <span>{shownCount} of 168 reports</span>
+        <span>{shownCount} of {rows.length} reports</span>
       </div>
     </div>
   );
