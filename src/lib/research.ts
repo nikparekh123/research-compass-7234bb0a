@@ -38,28 +38,8 @@ export const secLabel: Record<SectorKey, string> = {
   stpl: "Staples",
 };
 
-const seed = (r: Omit<Report, "sectors" | "tags" | "summary" | "visibility">): Report => ({
-  ...r, sectors: [secLabel[r.sec]], tags: [], summary: "", visibility: "Team",
-});
-
-export const SEED_REPORTS: Report[] = [
-  seed({ d: "Apr 18", tickers: ["AAPL"], typ: "single", sec: "tech",   title: "Apple — services margin expansion vs. HW cycle drag",        author: "M. Chen", read: "12m", star: true,  fresh: "new" }),
-  seed({ d: "Apr 18", tickers: [],       typ: "macro",  sec: "macro",  title: "Fed balance sheet runoff — tapering the taper",              author: "R. Park", read: "8m",  star: false, fresh: "new" }),
-  seed({ d: "Apr 18", tickers: ["XOM"],  typ: "single", sec: "energy", title: "Exxon — Permian capex discipline into Q2",                   author: "L. Díaz", read: "14m", star: true,  fresh: "new" }),
-  seed({ d: "Apr 17", tickers: [],       typ: "theme",  sec: "tech",   title: "Edge-inference silicon — winners beyond NVDA",               author: "S. Alvi", read: "21m", star: false, fresh: "new" }),
-  seed({ d: "Apr 17", tickers: ["JPM"],  typ: "earn",   sec: "fin",    title: "JPMorgan 1Q26 — NII guide, card charge-offs inflecting",     author: "M. Chen", read: "9m",  star: false, fresh: "unread" }),
-  seed({ d: "Apr 17", tickers: ["CVX"],  typ: "single", sec: "energy", title: "Chevron — Hess arbitration overhang quantified",             author: "L. Díaz", read: "11m", star: false, fresh: "unread" }),
-  seed({ d: "Apr 16", tickers: [],       typ: "macro",  sec: "macro",  title: "USD wrecking ball — EM pain thresholds",                     author: "R. Park", read: "15m", star: true,  fresh: "unread" }),
-  seed({ d: "Apr 16", tickers: ["MSFT"], typ: "single", sec: "tech",   title: "Microsoft — Azure AI capacity build vs. GM compression",     author: "S. Alvi", read: "18m", star: false, fresh: "unread" }),
-  seed({ d: "Apr 15", tickers: ["GS"],   typ: "earn",   sec: "fin",    title: "Goldman — FICC beat, IB pipeline commentary",                author: "M. Chen", read: "10m", star: false, fresh: "read" }),
-  seed({ d: "Apr 15", tickers: [],       typ: "theme",  sec: "fin",    title: "Regional banks — CRE maturity wall mapping",                 author: "M. Chen", read: "24m", star: false, fresh: "read" }),
-  seed({ d: "Apr 14", tickers: ["NVDA"], typ: "single", sec: "tech",   title: "Nvidia — Blackwell ramp, hyperscaler allocation",            author: "S. Alvi", read: "19m", star: true,  fresh: "read" }),
-  seed({ d: "Apr 14", tickers: [],       typ: "macro",  sec: "macro",  title: "China credit impulse — is the floor in?",                    author: "R. Park", read: "13m", star: false, fresh: "read" }),
-  seed({ d: "Apr 11", tickers: ["SLB"],  typ: "single", sec: "energy", title: "Schlumberger — int’l offshore cycle, margin path",           author: "L. Díaz", read: "12m", star: false, fresh: "read" }),
-  seed({ d: "Apr 11", tickers: ["BAC"],  typ: "earn",   sec: "fin",    title: "Bank of America — deposit beta peak?",                       author: "M. Chen", read: "9m",  star: false, fresh: "read" }),
-  seed({ d: "Apr 10", tickers: [],       typ: "theme",  sec: "tech",   title: "Humanoid robotics stack — Q2 capex readthrough",             author: "S. Alvi", read: "22m", star: false, fresh: "read" }),
-  seed({ d: "Apr 10", tickers: ["UNH"],  typ: "single", sec: "hlth",   title: "UnitedHealth — MLR pressure + Optum Rx tailwind",            author: "M. Chen", read: "14m", star: false, fresh: "read" }),
-];
+// Seed data removed — the app now starts with an empty `reports` table and
+// grows only through real uploads.
 
 export const SECTORS: { k: SectorKey | "all"; label: string; count: number }[] = [
   { k: "all",    label: "All",         count: 168 },
@@ -198,34 +178,6 @@ export async function fetchReports(): Promise<ReportRow[]> {
   return (data as DbReport[]).map(dbToReport);
 }
 
-const SEED_AUTHOR_DATES: Record<string, string> = {
-  "Apr 18": "2026-04-18", "Apr 17": "2026-04-17", "Apr 16": "2026-04-16",
-  "Apr 15": "2026-04-15", "Apr 14": "2026-04-14", "Apr 11": "2026-04-11", "Apr 10": "2026-04-10",
-};
-
-export async function seedReportsIfEmpty(): Promise<boolean> {
-  const { count, error } = await supabase
-    .from("reports")
-    .select("id", { count: "exact", head: true });
-  if (error) throw error;
-  if ((count ?? 0) > 0) return false;
-
-  const rows = SEED_REPORTS.map((r) => ({
-    title: r.title,
-    tickers: r.tickers,
-    report_type: r.typ,
-    primary_sector: secLabel[r.sec],
-    sectors: r.sectors,
-    author: r.author,
-    published_at: SEED_AUTHOR_DATES[r.d] || new Date().toISOString().slice(0, 10),
-    read_minutes: parseInt(r.read, 10) || 10,
-    tags: r.tags,
-    summary: r.summary,
-    visibility: r.visibility,
-    starred: r.star,
-  }));
-  const { error: insErr } = await supabase.from("reports").insert(rows);
-  if (insErr) throw insErr;
-  return true;
-}
+// Sample-data auto-seed intentionally removed. The `reports` table starts
+// empty and only populates from real uploads via the UploadModal.
 
