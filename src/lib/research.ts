@@ -145,6 +145,7 @@ const formatShortDate = (iso: string | null): string => {
 
 export interface ReportRow extends Report {
   id: string;
+  file_path: string | null;
 }
 
 export function dbToReport(r: DbReport): ReportRow {
@@ -165,7 +166,14 @@ export function dbToReport(r: DbReport): ReportRow {
     tags: r.tags || [],
     summary: r.summary || "",
     visibility: (["Team", "Firm-wide", "Private"].includes(r.visibility) ? r.visibility : "Team") as Visibility,
+    file_path: r.file_path,
   };
+}
+
+export function getReportPublicUrl(file_path: string | null): string | null {
+  if (!file_path) return null;
+  const { data } = supabase.storage.from("reports").getPublicUrl(file_path);
+  return data.publicUrl ?? null;
 }
 
 export async function fetchReports(): Promise<ReportRow[]> {

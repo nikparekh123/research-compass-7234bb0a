@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   SECTORS, TYPES, RECENCY, VIEWS,
-  typeLabel, groupRows, fetchReports,
+  typeLabel, groupRows, fetchReports, getReportPublicUrl,
   type ReportRow, type ReportType, type SectorKey, type ViewKey,
 } from "@/lib/research";
 import { supabase } from "@/integrations/supabase/client";
@@ -113,11 +113,17 @@ function ViewSwitcher({ view, setView }: { view: ViewKey; setView: (v: ViewKey) 
   );
 }
 
-function Row({ r, onStar }: { r: ReportRow; onStar: () => void }) {
+function Row({ r, onStar, onOpen }: { r: ReportRow; onStar: () => void; onOpen: () => void }) {
   const primary = r.tickers[0] ?? "—";
   const dash = primary === "—";
   return (
-    <div className={"rep " + r.fresh}>
+    <div
+      className={"rep " + r.fresh}
+      onClick={onOpen}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
+    >
       <div className="rep-bar" />
       <div
         className={"rep-star" + (r.star ? " on" : "")}
@@ -287,7 +293,16 @@ export default function Index() {
                 </div>
               )}
               {g.items.map((r, i) => (
-                <Row key={g.key + "-" + (r.id || i)} r={r} onStar={() => toggleStar(r.id, r.star)} />
+                <Row
+                  key={g.key + "-" + (r.id || i)}
+                  r={r}
+                  onStar={() => toggleStar(r.id, r.star)}
+                  onOpen={() => {
+                    const url = getReportPublicUrl(r.file_path);
+                    if (!url) { toast.error("No file attached to this report"); return; }
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  }}
+                />
               ))}
             </div>
           ))}

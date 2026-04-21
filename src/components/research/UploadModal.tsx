@@ -116,7 +116,7 @@ export default function UploadModal({ open, onClose, onPublished }: UploadModalP
   const [tickerDraft, setTickerDraft] = useState("");
   const [rtype, setRtype] = useState<ReportType>("single");
   const [sectors, setSectors] = useState<string[]>([]);
-  const [author, setAuthor] = useState("M. Chen");
+  const [author, setAuthor] = useState("Team");
   const [pubDate, setPubDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [tags, setTags] = useState<string[]>([]);
   const [tagDraft, setTagDraft] = useState("");
