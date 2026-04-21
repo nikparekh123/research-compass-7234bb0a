@@ -32,18 +32,42 @@ function Dropzone({ file, setFile, stage, setStage }: DropzoneProps) {
 
   const accept = (f?: File) => {
     if (!f) return;
-    const isHtml = /\.html?$/i.test(f.name) || f.type === "text/html";
-    if (!isHtml) return;
+    const isHtml = /\.html?$/i.test(f.name) || f.type === "text/html" || f.type === "";
+    if (!isHtml) {
+      toast.error(`Only HTML files are supported (got ${f.name})`);
+      return;
+    }
     setFile({ name: f.name, size: f.size, file: f });
     setStage("ready");
   };
 
+  // While the modal is open, swallow drag/drop at the window level so the
+  // browser doesn't navigate to open the file if the user drops off-target.
+  useEffect(() => {
+    const prevent = (e: DragEvent) => {
+      // Only prevent when a file is being dragged
+      if (e.dataTransfer?.types?.includes("Files")) e.preventDefault();
+    };
+    window.addEventListener("dragover", prevent);
+    window.addEventListener("drop", prevent);
+    return () => {
+      window.removeEventListener("dragover", prevent);
+      window.removeEventListener("drop", prevent);
+    };
+  }, []);
+
   return (
     <div
       className={"up-drop" + (drag ? " drag" : "") + (file ? " has" : "")}
-      onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-      onDragLeave={() => setDrag(false)}
-      onDrop={(e) => { e.preventDefault(); setDrag(false); accept(e.dataTransfer.files?.[0]); }}
+      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDrag(true); }}
+      onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setDrag(true); }}
+      onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDrag(false); }}
+      onDrop={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDrag(false);
+        accept(e.dataTransfer.files?.[0]);
+      }}
       onClick={() => !file && inputRef.current?.click()}
     >
       <input
