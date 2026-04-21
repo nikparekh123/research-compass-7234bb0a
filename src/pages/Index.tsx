@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   SECTORS, TYPES, RECENCY, VIEWS,
-  typeLabel, groupRows, fetchReports, openReportInNewTab,
+  typeLabel, groupRows, fetchReports, openReportInNewTab, deleteReport,
   type ReportRow, type ReportType, type SectorKey, type ViewKey,
 } from "@/lib/research";
 import { supabase } from "@/integrations/supabase/client";
@@ -113,7 +113,12 @@ function ViewSwitcher({ view, setView }: { view: ViewKey; setView: (v: ViewKey) 
   );
 }
 
-function Row({ r, onStar, onOpen }: { r: ReportRow; onStar: () => void; onOpen: () => void }) {
+function Row({ r, onStar, onOpen, onDelete }: {
+  r: ReportRow;
+  onStar: () => void;
+  onOpen: () => void;
+  onDelete: () => void;
+}) {
   const primary = r.tickers[0] ?? "—";
   const dash = primary === "—";
   return (
@@ -142,7 +147,17 @@ function Row({ r, onStar, onOpen }: { r: ReportRow; onStar: () => void; onOpen: 
       </div>
       <div className="rep-author">{r.author}</div>
       <div className="rep-read">{r.read}</div>
-      <div className="rep-open">↗</div>
+      <div className="rep-actions">
+        <button
+          className="rep-delete"
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          aria-label="Delete report"
+          title="Delete"
+        >
+          ✕
+        </button>
+        <span className="rep-open" aria-hidden>↗</span>
+      </div>
     </div>
   );
 }
@@ -301,6 +316,22 @@ export default function Index() {
                     openReportInNewTab(r.file_path).catch((e) =>
                       toast.error(e instanceof Error ? e.message : "Couldn't open report"),
                     );
+                  }}
+                  onDelete={async () => {
+                    if (!window.confirm(`Delete "${r.title}"? This can't be undone.`)) return;
+                    // Optimistic: remove from the cached list immediately
+                    const prev = queryClient.getQueryData<ReportRow[]>(["reports"]);
+                    queryClient.setQueryData<ReportRow[]>(["reports"], (xs) =>
+                      (xs ?? []).filter((x) => x.id !== r.id),
+                    );
+                    try {
+                      await deleteReport(r.id, r.file_path);
+                      toast.success("Report deleted");
+                      queryClient.invalidateQueries({ queryKey: ["reports"] });
+                    } catch (e) {
+                      queryClient.setQueryData(["reports"], prev);
+                      toast.error(e instanceof Error ? e.message : "Delete failed");
+                    }
                   }}
                 />
               ))}

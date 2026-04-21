@@ -180,6 +180,16 @@ export function getReportPublicUrl(file_path: string | null): string | null {
 // protection — so opening the public URL renders the source, not the page.
 // Workaround: download the bytes, wrap them in a client-side Blob with
 // text/html, and open that blob URL. The browser renders it normally.
+export async function deleteReport(id: string, file_path: string | null): Promise<void> {
+  if (file_path) {
+    const { error: rmErr } = await supabase.storage.from("reports").remove([file_path]);
+    // If the file is already gone, press on — we still want to remove the row.
+    if (rmErr && !/not.?found/i.test(rmErr.message)) throw rmErr;
+  }
+  const { error } = await supabase.from("reports").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function openReportInNewTab(file_path: string | null): Promise<void> {
   if (!file_path) throw new Error("No file attached to this report");
   const { data, error } = await supabase.storage.from("reports").download(file_path);

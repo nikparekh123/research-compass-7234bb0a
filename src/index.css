@@ -196,7 +196,7 @@ button:focus-visible { outline: 1.5px solid var(--navi-neon); outline-offset: 2p
 .grp-action { font-size: 11px; background: none; border: none; cursor: pointer; color: var(--navi-fg4); transition: color var(--navi-dur-fast) var(--navi-ease); }
 .grp-action:hover { color: var(--navi-fg2); }
 
-.rep { display: grid; grid-template-columns: 3px 18px 62px 60px 64px 1fr 120px 80px 18px; gap: 14px; align-items: center; padding: 11px 12px 11px 0; border-bottom: 1px solid rgba(30,90,80,.12); cursor: pointer; transition: background var(--navi-dur-fast) var(--navi-ease); position: relative; }
+.rep { display: grid; grid-template-columns: 3px 18px 62px 60px 64px 1fr 120px 80px 44px; gap: 14px; align-items: center; padding: 11px 12px 11px 0; border-bottom: 1px solid rgba(30,90,80,.12); cursor: pointer; transition: background var(--navi-dur-fast) var(--navi-ease); position: relative; }
 .rep:hover { background: rgba(30,90,80,.08); }
 .rep:hover .rep-open { color: var(--navi-neon); }
 
@@ -229,7 +229,22 @@ button:focus-visible { outline: 1.5px solid var(--navi-neon); outline-offset: 2p
 .rep-read { font-family: var(--navi-font-mono); font-size: 10px; color: var(--navi-fg4); text-align: right; }
 .rep-open { text-align: center; font-size: 12px; color: var(--navi-fg4); transition: color var(--navi-dur-fast) var(--navi-ease); }
 
-.cols { display: grid; grid-template-columns: 3px 18px 62px 60px 64px 1fr 120px 80px 18px; gap: 14px; align-items: center; padding: 0 12px 7px 0; border-bottom: 1px solid rgba(30,90,80,.25); font-size: 8px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--navi-fg5); margin-top: 4px; }
+.rep-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.rep-delete {
+  background: none; border: none; cursor: pointer;
+  color: var(--navi-fg5); font-size: 12px; line-height: 1;
+  width: 18px; height: 18px; border-radius: 4px;
+  display: inline-flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity var(--navi-dur-fast) var(--navi-ease),
+              color var(--navi-dur-fast) var(--navi-ease),
+              background var(--navi-dur-fast) var(--navi-ease);
+}
+.rep:hover .rep-delete { opacity: 1; }
+.rep-delete:hover { color: var(--navi-negative); background: rgba(232,112,96,.1); }
+.rep-delete:focus-visible { opacity: 1; }
+
+.cols { display: grid; grid-template-columns: 3px 18px 62px 60px 64px 1fr 120px 80px 44px; gap: 14px; align-items: center; padding: 0 12px 7px 0; border-bottom: 1px solid rgba(30,90,80,.25); font-size: 8px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--navi-fg5); margin-top: 4px; }
 
 .foot { display: flex; align-items: center; gap: 16px; padding: 16px 28px; border-top: 1px solid rgba(30,90,80,.12); background: var(--navi-dash-page); font-family: var(--navi-font-mono); font-size: 10px; color: var(--navi-fg4); }
 .foot kbd { background: rgba(30,90,80,.2); padding: 1px 5px; border-radius: 3px; color: var(--navi-fg3); margin-right: 2px; }
