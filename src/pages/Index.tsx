@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   SECTORS, TYPES, RECENCY, VIEWS,
-  typeLabel, groupRows, fetchReports, seedReportsIfEmpty,
+  typeLabel, groupRows, fetchReports,
   type ReportRow, type ReportType, type SectorKey, type ViewKey,
 } from "@/lib/research";
 import { supabase } from "@/integrations/supabase/client";
@@ -213,10 +213,7 @@ export default function Index() {
 
   const { data: rows = [] } = useQuery({
     queryKey: ["reports"],
-    queryFn: async () => {
-      await seedReportsIfEmpty().catch((e) => console.error("seed failed", e));
-      return fetchReports();
-    },
+    queryFn: () => fetchReports(),
   });
 
   const filtered = useMemo(
