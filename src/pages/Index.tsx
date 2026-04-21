@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   SECTORS, TYPES, RECENCY, VIEWS,
-  typeLabel, groupRows, fetchReports, getReportPublicUrl,
+  typeLabel, groupRows, fetchReports, openReportInNewTab,
   type ReportRow, type ReportType, type SectorKey, type ViewKey,
 } from "@/lib/research";
 import { supabase } from "@/integrations/supabase/client";
@@ -298,9 +298,9 @@ export default function Index() {
                   r={r}
                   onStar={() => toggleStar(r.id, r.star)}
                   onOpen={() => {
-                    const url = getReportPublicUrl(r.file_path);
-                    if (!url) { toast.error("No file attached to this report"); return; }
-                    window.open(url, "_blank", "noopener,noreferrer");
+                    openReportInNewTab(r.file_path).catch((e) =>
+                      toast.error(e instanceof Error ? e.message : "Couldn't open report"),
+                    );
                   }}
                 />
               ))}

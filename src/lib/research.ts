@@ -176,6 +176,24 @@ export function getReportPublicUrl(file_path: string | null): string | null {
   return data.publicUrl ?? null;
 }
 
+// Supabase Storage forces HTML files to be served as text/plain for XSS
+// protection — so opening the public URL renders the source, not the page.
+// Workaround: download the bytes, wrap them in a client-side Blob with
+// text/html, and open that blob URL. The browser renders it normally.
+export async function openReportInNewTab(file_path: string | null): Promise<void> {
+  if (!file_path) throw new Error("No file attached to this report");
+  const { data, error } = await supabase.storage.from("reports").download(file_path);
+  if (error || !data) throw error ?? new Error("Download failed");
+  const html = await data.text();
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, "_blank", "noopener,noreferrer");
+  // Revoke after the new tab has had a chance to load. If popup was blocked
+  // (w === null) we still revoke so we don't leak memory.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  if (!w) throw new Error("Popup blocked — allow popups for this site");
+}
+
 export async function fetchReports(): Promise<ReportRow[]> {
   const { data, error } = await supabase
     .from("reports")

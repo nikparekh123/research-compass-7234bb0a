@@ -175,9 +175,13 @@ export default function UploadModal({ open, onClose, onPublished }: UploadModalP
     try {
       const ext = (file.name.match(/\.html?$/i)?.[0] || ".html").toLowerCase();
       const path = `${crypto.randomUUID()}${ext}`;
+      // Re-wrap the File as a Blob with explicit text/html type — some
+      // browsers/OSes give the File an empty `.type` and Supabase then
+      // serves it as text/plain, which the browser renders as source.
+      const blob = new Blob([await file.file.arrayBuffer()], { type: "text/html" });
       const { error: upErr } = await supabase.storage
         .from("reports")
-        .upload(path, file.file, { contentType: "text/html", upsert: false });
+        .upload(path, blob, { contentType: "text/html", upsert: false });
       if (upErr) throw upErr;
 
       const readMin = Math.max(3, Math.round((summary.length + 200) / 40));
