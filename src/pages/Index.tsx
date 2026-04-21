@@ -194,18 +194,24 @@ function SubHeader({ view }: { view: ViewKey }) {
   );
 }
 
-function Banner() {
+function Banner({ rows }: { rows: ReportRow[] }) {
+  if (!rows.length) return null;
+  const recent = rows.slice(0, 8);
+  const summary = `${rows.length} report${rows.length === 1 ? "" : "s"} in the hub`;
+
   const items = (
     <>
-      <span className="banner-alert">⚠ 8 new reports since your last visit — Apr 15, 4:12 PM</span>
+      <span className="banner-alert">◆ {summary}</span>
       <span className="banner-sep">·········</span>
-      <span className="banner-item"><span className="k">AAPL</span> <span className="v">services margin deep-dive</span> <span className="n">NEW</span></span>
-      <span className="banner-sep">·</span>
-      <span className="banner-item"><span className="k">XOM</span> <span className="v">Permian capex discipline</span> <span className="n">NEW</span></span>
-      <span className="banner-sep">·</span>
-      <span className="banner-item"><span className="k">FED</span> <span className="v">balance-sheet runoff</span> <span className="n">NEW</span></span>
-      <span className="banner-sep">·</span>
-      <span className="banner-item"><span className="k">This week</span> <span className="v">24 reports · 4 analysts · 3h 42m reading</span></span>
+      {recent.map((r, i) => (
+        <span key={r.id} style={{ display: "inline-flex", alignItems: "center" }}>
+          <span className="banner-item">
+            <span className="k">{r.tickers[0] ?? r.typ.toUpperCase()}</span>{" "}
+            <span className="v">{r.title}</span>
+          </span>
+          {i < recent.length - 1 && <span className="banner-sep">·</span>}
+        </span>
+      ))}
       <span className="banner-sep">·········</span>
     </>
   );
@@ -346,7 +352,7 @@ export default function Index() {
         </div>
       </div>
 
-      <Banner />
+      <Banner rows={rows} />
 
       <UploadModal
         open={uploadOpen}
