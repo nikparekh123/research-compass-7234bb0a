@@ -190,18 +190,15 @@ export async function deleteReport(id: string, file_path: string | null): Promis
   if (error) throw error;
 }
 
-export async function openReportInNewTab(file_path: string | null): Promise<void> {
+// Supabase Storage forces HTML files to be served as text/plain for XSS
+// protection, so `<iframe src=publicUrl>` would show the source, not the
+// page. We download the bytes and return them so the caller can feed
+// `srcDoc` on an iframe — that always renders as HTML.
+export async function fetchReportHtml(file_path: string | null): Promise<string> {
   if (!file_path) throw new Error("No file attached to this report");
   const { data, error } = await supabase.storage.from("reports").download(file_path);
   if (error || !data) throw error ?? new Error("Download failed");
-  const html = await data.text();
-  const blob = new Blob([html], { type: "text/html" });
-  const url = URL.createObjectURL(blob);
-  const w = window.open(url, "_blank", "noopener,noreferrer");
-  // Revoke after the new tab has had a chance to load. If popup was blocked
-  // (w === null) we still revoke so we don't leak memory.
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  if (!w) throw new Error("Popup blocked — allow popups for this site");
+  return data.text();
 }
 
 export async function fetchReports(): Promise<ReportRow[]> {

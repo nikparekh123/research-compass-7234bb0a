@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   SECTORS, TYPES, RECENCY, VIEWS,
-  typeLabel, groupRows, fetchReports, openReportInNewTab, deleteReport,
+  typeLabel, groupRows, fetchReports, deleteReport,
   type ReportRow, type ReportType, type SectorKey, type ViewKey,
 } from "@/lib/research";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import UploadModal from "@/components/research/UploadModal";
+import ReportViewer from "@/components/research/ReportViewer";
 
 function Brand() {
   return (
@@ -233,6 +234,7 @@ export default function Index() {
   const [starredOnly, setStarredOnly] = useState(false);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [viewing, setViewing] = useState<ReportRow | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -319,9 +321,8 @@ export default function Index() {
                   r={r}
                   onStar={() => toggleStar(r.id, r.star)}
                   onOpen={() => {
-                    openReportInNewTab(r.file_path).catch((e) =>
-                      toast.error(e instanceof Error ? e.message : "Couldn't open report"),
-                    );
+                    if (!r.file_path) { toast.error("No file attached to this report"); return; }
+                    setViewing(r);
                   }}
                   onDelete={async () => {
                     if (!window.confirm(`Delete "${r.title}"? This can't be undone.`)) return;
@@ -359,6 +360,8 @@ export default function Index() {
         onClose={() => setUploadOpen(false)}
         onPublished={() => queryClient.invalidateQueries({ queryKey: ["reports"] })}
       />
+
+      <ReportViewer report={viewing} onClose={() => setViewing(null)} />
 
       <div className="foot">
         <span><kbd>↑↓</kbd>navigate</span>
