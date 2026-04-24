@@ -893,6 +893,64 @@ button:focus-visible { outline: 1.5px solid var(--navi-neon); outline-offset: 2p
   color: var(--neon-dim); margin-top: 10px;
 }
 
+/* Sign-in (magic link) — replaces the old passcode block on the landing */
+.signin {
+  min-width: 360px;
+  margin-left: auto;
+  text-align: right;
+}
+.signin-label {
+  font-family: var(--navi-font-sans);
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--neon-muted);
+  display: block;
+  margin-bottom: 10px;
+}
+.signin-row {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.signin-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  border-bottom: 1.5px solid var(--neon-text-on-neon);
+  background: transparent;
+  font-family: var(--navi-font-sans);
+  font-size: 16px; font-weight: 500;
+  color: var(--neon-text-on-neon);
+  caret-color: var(--neon-text-on-neon);
+  padding: 6px 0;
+  outline: none;
+  text-align: left;
+  transition: background .15s var(--navi-ease);
+}
+.signin-input::placeholder { color: var(--neon-dim); }
+.signin-input:focus { background: rgba(26,58,34,.06); }
+.signin-input:disabled { opacity: .55; }
+.signin-btn {
+  background: var(--neon-text-on-neon);
+  color: var(--navi-neon);
+  border: none;
+  font-family: var(--navi-font-sans);
+  font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-weight: 500;
+  padding: 0 16px;
+  height: 40px;
+  cursor: pointer;
+  transition: opacity .15s var(--navi-ease);
+}
+.signin-btn:hover:not(:disabled) { opacity: .85; }
+.signin-btn:disabled { cursor: not-allowed; opacity: .5; }
+.signin-hint {
+  font-family: var(--navi-font-sans);
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--neon-muted);
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
 /* ── Dashboard (dark green) ── */
 .dash {
   height: 100vh; width: 100%;

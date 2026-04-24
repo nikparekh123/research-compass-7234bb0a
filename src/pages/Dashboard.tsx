@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { lockSession } from "@/lib/auth";
+import { signOut, getDisplayName } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 type Status = "live" | "soon";
 interface Tool {
@@ -75,6 +76,17 @@ export default function Dashboard() {
   const now = useNow();
   const [toast, setToast] = useState<ToastState | null>(null);
   const [fading, setFading] = useState(false);
+  const [name, setName] = useState<string>("there");
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (cancelled || !data.user) return;
+      const n = await getDisplayName(data.user);
+      if (!cancelled) setName(n);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const clocks = [
     { city: "NYC", tz: "ET",  offset: -4 },
@@ -95,8 +107,8 @@ export default function Dashboard() {
 
   const onLogout = () => {
     setFading(true);
-    setTimeout(() => {
-      lockSession();
+    setTimeout(async () => {
+      await signOut();
       navigate("/", { replace: true });
     }, 400);
   };
@@ -123,7 +135,7 @@ export default function Dashboard() {
         <div className="dash-top">
           <div className="dash-wordmark">Sunny Wealth Management<span className="cursor neon" /></div>
           <div className="dash-meta">
-            <span className="meta-greet">{greeting(now.getHours())}, Niket</span>
+            <span className="meta-greet">{greeting(now.getHours())}, {name}</span>
             <span>·</span>
             <span>{formatDate(now)}</span>
             <button className="logout" onClick={onLogout}>log out ↗</button>

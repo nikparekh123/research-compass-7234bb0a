@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { isUnlocked, tryPasscode } from "@/lib/auth";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { sendMagicLink, getCurrentSession } from "@/lib/auth";
 
 function useNow() {
   const [now, setNow] = useState(new Date());
@@ -19,63 +19,46 @@ function formatClock(date: Date, offsetHours: number) {
   return `${h}:${m}`;
 }
 
+type Stage = "idle" | "sending" | "sent" | "error";
+
 export default function Landing() {
   const navigate = useNavigate();
-  const [digits, setDigits] = useState<string[]>(["", "", "", ""]);
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [fading, setFading] = useState(false);
-  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const [params] = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [stage, setStage] = useState<Stage>("idle");
+  const [msg, setMsg] = useState<string | null>(() => {
+    if (params.get("denied") === "1") return "That email isn't on the allowlist. Ask Niket for access.";
+    if (params.get("expired") === "1") return "That link expired. Send yourself a new one.";
+    return null;
+  });
   const now = useNow();
   const nyc = formatClock(now, -4);
 
-  // Already unlocked? Skip straight to dashboard.
-  useEffect(() => { if (isUnlocked()) navigate("/dashboard", { replace: true }); }, [navigate]);
-
-  // Autofocus first digit
-  useEffect(() => { inputRefs.current[0]?.focus(); }, []);
-
-  // Auto-submit once all 4 filled
+  // Already signed in? Skip straight to the dashboard.
   useEffect(() => {
-    if (!digits.every((d) => d !== "")) return;
-    if (submitting) return;
-    setSubmitting(true);
-    setError(null);
-    const code = digits.join("");
+    getCurrentSession().then((s) => { if (s?.user) navigate("/dashboard", { replace: true }); });
+  }, [navigate]);
 
-    tryPasscode(code).then((res) => {
-      if (res.ok) {
-        setFading(true);
-        setTimeout(() => navigate("/dashboard", { replace: true }), 400);
-        return;
-      }
-      // Reset + explain
-      if (res.reason === "rate_limited") setError("Too many attempts — try again in a few minutes.");
-      else if (res.reason === "network") setError("Can't reach the server.");
-      else setError("That's not the passcode.");
-      setDigits(["", "", "", ""]);
-      setSubmitting(false);
-      setTimeout(() => inputRefs.current[0]?.focus(), 0);
-    });
-  }, [digits, submitting, navigate]);
-
-  const handleChange = (i: number, v: string) => {
-    const ch = v.slice(-1).replace(/[^0-9]/g, "");
-    if (!ch && v !== "") return;
-    const next = [...digits];
-    next[i] = ch;
-    setDigits(next);
-    if (ch && i < 3) inputRefs.current[i + 1]?.focus();
-  };
-
-  const handleKey = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !digits[i] && i > 0) {
-      inputRefs.current[i - 1]?.focus();
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (stage === "sending") return;
+    setStage("sending");
+    setMsg(null);
+    const res = await sendMagicLink(email);
+    if (res.ok) {
+      setStage("sent");
+      setMsg(`Check ${email.trim().toLowerCase()} — we sent you a sign-in link.`);
+      return;
     }
+    setStage("error");
+    if (res.reason === "invalid_email") setMsg("That doesn't look like a valid email.");
+    else if (res.reason === "rate_limited") setMsg("Too many requests. Wait a minute and try again.");
+    else if (res.reason === "network") setMsg("Couldn't reach the server. Check your connection.");
+    else setMsg(res.message || "Something went wrong. Try again.");
   };
 
   return (
-    <div className={"app" + (fading ? " fading" : "")}>
+    <div className="app">
       <div className="landing">
         <div className="landing-top">
           <div className="wordmark">Sunnyfi<span className="cursor" /></div>
@@ -95,30 +78,34 @@ export default function Landing() {
         </div>
 
         <div className="landing-foot">
-          <div className="passcode">
-            <div className="passcode-label">Passcode</div>
-            <div className="passcode-inputs">
-              {digits.map((d, i) => (
-                <input
-                  key={i}
-                  ref={(el) => { inputRefs.current[i] = el; }}
-                  className="passcode-input"
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={d}
-                  placeholder=" "
-                  aria-label={`Passcode digit ${i + 1}`}
-                  onChange={(e) => handleChange(i, e.target.value)}
-                  onKeyDown={(e) => handleKey(i, e)}
-                  disabled={submitting}
-                />
-              ))}
+          <form className="signin" onSubmit={onSubmit}>
+            <label className="signin-label">Sign in</label>
+            <div className="signin-row">
+              <input
+                className="signin-input"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="you@sunnyfi.co"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={stage === "sending" || stage === "sent"}
+                required
+              />
+              <button
+                className="signin-btn"
+                type="submit"
+                disabled={stage === "sending" || stage === "sent" || !email.trim()}
+              >
+                {stage === "sending" ? "Sending…" : stage === "sent" ? "Sent ↵" : "Send link ↵"}
+              </button>
             </div>
-            <div className="passcode-hint">
-              {error ? error : "Enter 4-digit passcode ↵"}
+            <div className="signin-hint">
+              {msg
+                ? msg
+                : "We'll email you a one-tap sign-in link."}
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>
