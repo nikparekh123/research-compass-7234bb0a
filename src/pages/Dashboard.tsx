@@ -121,7 +121,7 @@ export default function Dashboard() {
     <div className={"app" + (fading ? " fading" : "")}>
       <div className="dash">
         <div className="dash-top">
-          <div className="dash-wordmark">Sunnyfi Wealth<span className="cursor neon" /></div>
+          <div className="dash-wordmark">Sunny Wealth Management<span className="cursor neon" /></div>
           <div className="dash-meta">
             <span className="meta-greet">{greeting(now.getHours())}, Niket</span>
             <span>·</span>
