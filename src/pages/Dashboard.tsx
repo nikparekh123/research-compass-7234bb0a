@@ -78,7 +78,6 @@ export default function Dashboard() {
 
   const clocks = [
     { city: "NYC", tz: "ET",  offset: -4 },
-    { city: "DMD", tz: "ET",  offset: -4 },
     { city: "LIS", tz: "WET", offset:  1 },
     { city: "TUN", tz: "CET", offset:  1 },
     { city: "BOM", tz: "IST", offset:  5.5 },

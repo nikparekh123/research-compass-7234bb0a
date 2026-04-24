@@ -929,7 +929,7 @@ button:focus-visible { outline: 1.5px solid var(--navi-neon); outline-offset: 2p
 .clock-strip {
   margin-top: 18px; padding-bottom: 16px;
   border-bottom: 1px solid var(--dark-border);
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
 }
 .clock { display: flex; flex-direction: column; gap: 2px; }
 .clock-city {
@@ -1040,7 +1040,7 @@ button:focus-visible { outline: 1.5px solid var(--navi-neon); outline-offset: 2p
 @media (max-width: 900px) {
   .welcome-big  { font-size: clamp(56px, 11vw, 96px); }
   .tools-grid   { grid-template-columns: repeat(3, 1fr); }
-  .clock-strip  { grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .clock-strip  { grid-template-columns: repeat(4, 1fr); gap: 10px; }
   .clock-time   { font-size: 18px; }
   .landing      { padding: 28px 32px; }
   .dash         { padding: 20px 24px 14px; }
