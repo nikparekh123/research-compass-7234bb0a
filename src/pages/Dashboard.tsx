@@ -146,7 +146,6 @@ export default function Dashboard() {
         <div className="tools-section">
           <div className="tools-head">
             <span className="label">Tools · {TOOLS.length}</span>
-            <span className="label dim">⌘+number to open</span>
           </div>
           <div className="tools-grid">
             {TOOLS.map((t) => (
@@ -162,7 +161,6 @@ export default function Dashboard() {
                   <div className="tool-desc">{t.desc}</div>
                 </div>
                 <div className="tool-foot">
-                  <span className="tool-hotkey">⌘{t.hotkey}</span>
                   <span className="tool-status">{t.status === "live" ? "Live" : "Soon"}</span>
                 </div>
               </button>
