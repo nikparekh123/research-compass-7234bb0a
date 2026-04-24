@@ -56,21 +56,54 @@
     --navi-warning:       #e0c060;
     --navi-border-bright: #326e64;
 
+    /* Tinted backgrounds (cards, alerts, badges) */
+    --navi-tint-neon:      rgba(210,230,50,.10);
+    --navi-tint-positive:  rgba(168,212,160,.12);
+    --navi-tint-negative:  rgba(220,80,60,.10);
+    --navi-tint-warning:   rgba(224,192,96,.08);
+    --navi-tint-muted:     rgba(30,90,80,.20);
+    --navi-tint-surface:   rgba(15,51,51,.60);
+
     --navi-font-sans: 'Work Sans', system-ui, -apple-system, sans-serif;
     --navi-font-mono: 'DM Mono', 'SF Mono', Menlo, monospace;
 
     --navi-body-size: 13px;
     --navi-body-lh:   1.6;
 
+    /* Type scale (used by Reader + future surfaces) */
+    --navi-display-size:   80px;  --navi-display-weight: 800;  --navi-display-track: -4px;
+    --navi-hero-size:      52px;  --navi-hero-weight:    800;  --navi-hero-track:    -3px;
+    --navi-title-size:     36px;  --navi-title-weight:   300;  --navi-title-track:   -2px;
+    --navi-greek-size:     28px;  --navi-greek-weight:   400;  --navi-greek-track:   -1px;
+    --navi-metric-size:    22px;  --navi-metric-weight:  500;  --navi-metric-track:  -.5px;
+    --navi-label-size:      9px;  --navi-label-weight:   500;  --navi-label-track:    1.2px;
+    --navi-section-size:    8px;  --navi-section-weight: 600;  --navi-section-track:  2px;
+
+    --navi-space-1: 4px;
     --navi-space-2: 8px;
     --navi-space-3: 12px;
     --navi-space-4: 16px;
     --navi-space-5: 20px;
     --navi-space-6: 24px;
+    --navi-space-8: 32px;
+    --navi-space-10: 40px;
+    --navi-space-12: 52px;
+
+    --navi-radius-sm: 4px;
+    --navi-radius-md: 8px;
+    --navi-radius-lg: 10px;
+    --navi-radius-xl: 12px;
+    --navi-radius-pill: 100px;
+
+    --navi-border-hairline: 1px solid rgba(30,90,80,.12);
+    --navi-border-soft:     1px solid rgba(30,90,80,.25);
+    --navi-border-strong:   1.5px solid var(--navi-border-bright);
+    --navi-border-neon:     1.5px solid rgba(210,230,50,.30);
 
     --navi-ease:     cubic-bezier(.4,0,.2,1);
     --navi-dur-fast: .15s;
     --navi-dur-mid:  .25s;
+    --navi-dur-slow: .4s;
   }
 
   .dark {
@@ -129,8 +162,21 @@ button:focus-visible { outline: 1.5px solid var(--navi-neon); outline-offset: 2p
 .app { min-height: 100vh; display: flex; flex-direction: column; }
 
 .hdr { display: flex; align-items: center; gap: var(--navi-space-6); padding: 14px 28px 0; }
-.brand { font-size: 14px; font-weight: 700; letter-spacing: 5px; text-transform: uppercase; color: var(--navi-neon); }
-.brand .cursor { display: inline-block; width: 3px; height: .8em; background: var(--navi-neon); animation: navi-blink 1s step-end infinite; vertical-align: text-bottom; margin-left: 2px; }
+.brand {
+  font-size: 14px; font-weight: 700;
+  letter-spacing: 5px; text-transform: uppercase;
+  color: var(--navi-neon);
+  display: inline-flex; align-items: center; gap: 3px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.brand .brand-txt { white-space: nowrap; }
+.brand .cursor {
+  display: inline-block; width: 3px; height: 12px;
+  background: var(--navi-neon);
+  animation: navi-blink 1s step-end infinite;
+  flex-shrink: 0;
+}
 .live { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--navi-fg3); }
 .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--navi-positive); animation: navi-pulse 2.5s ease-in-out infinite; }
 .hdr-spacer { flex: 1; }

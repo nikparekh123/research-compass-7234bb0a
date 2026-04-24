@@ -14,7 +14,8 @@ function Brand() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
       <div className="brand">
-        Research Hub<span className="cursor" />
+        <span className="brand-txt">Research Hub</span>
+        <span className="cursor" />
       </div>
     </div>
   );
