@@ -996,7 +996,7 @@ button:focus-visible { outline: 1.5px solid var(--navi-neon); outline-offset: 2p
 .tool-card.live .tool-desc { color: rgba(210,230,50,.55); }
 
 .tool-foot {
-  display: flex; justify-content: space-between; align-items: baseline;
+  display: flex; justify-content: flex-start; align-items: baseline;
   margin-top: 14px; padding-top: 10px;
   border-top: 1px solid var(--dark-border);
 }
