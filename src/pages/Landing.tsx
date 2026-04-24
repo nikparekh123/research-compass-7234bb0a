@@ -95,13 +95,6 @@ export default function Landing() {
         </div>
 
         <div className="landing-foot">
-          <div className="footer-tools">
-            <span className="label">Tools</span>
-            <a className="tool-dot" href="https://todos.sunnyfi.co">Tasks</a>
-            <span className="tool-dot">Research Hub</span>
-            <span className="tool-dot soon">+4 more</span>
-          </div>
-
           <div className="passcode">
             <div className="passcode-label">Passcode</div>
             <div className="passcode-inputs">

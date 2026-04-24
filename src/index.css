@@ -867,7 +867,7 @@ button:focus-visible { outline: 1.5px solid var(--navi-neon); outline-offset: 2p
 }
 .tool-dot.soon:hover { opacity: 1; }
 
-.passcode { min-width: 260px; text-align: right; }
+.passcode { min-width: 260px; text-align: right; margin-left: auto; }
 .passcode-label {
   font-family: var(--navi-font-sans);
   font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
