@@ -323,7 +323,7 @@ export default function Index() {
                   onStar={() => toggleStar(r.id, r.star)}
                   onOpen={() => {
                     if (!r.id) return;
-                    navigate(`/reports/${r.id}`);
+                    navigate(`/research/reports/${r.id}`);
                   }}
                   onDelete={async () => {
                     if (!window.confirm(`Delete "${r.title}"? This can't be undone.`)) return;

@@ -199,9 +199,9 @@ export default function Reader() {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
-      if (e.key === "Escape") { navigate("/"); return; }
-      if (e.key === "n" || e.key === "N") { if (next) navigate(`/reports/${next.id}`); return; }
-      if (e.key === "p" || e.key === "P") { if (prev) navigate(`/reports/${prev.id}`); return; }
+      if (e.key === "Escape") { navigate("/research"); return; }
+      if (e.key === "n" || e.key === "N") { if (next) navigate(`/research/reports/${next.id}`); return; }
+      if (e.key === "p" || e.key === "P") { if (prev) navigate(`/research/reports/${prev.id}`); return; }
       const win = iframeRef.current?.contentWindow;
       if (!win || sections.length === 0) return;
       const y = win.scrollY + 40;
@@ -277,7 +277,7 @@ export default function Reader() {
     return (
       <div className="rr-shell rr-loading">
         <div className="rr-loading-text">Couldn't find that report.</div>
-        <Link to="/" className="back"><span className="arrow">←</span><span>Back to Research</span></Link>
+        <Link to="/research" className="back"><span className="arrow">←</span><span>Back to Research</span></Link>
       </div>
     );
   }
@@ -290,7 +290,7 @@ export default function Reader() {
     <div className="rr-shell">
       {/* Top chrome */}
       <div className="rr-top">
-        <Link to="/" className="back">
+        <Link to="/research" className="back">
           <span className="arrow">←</span>
           <span>Research</span>
         </Link>
@@ -465,7 +465,7 @@ export default function Reader() {
               <div
                 className="related-item"
                 key={r.id}
-                onClick={() => navigate(`/reports/${r.id}`)}
+                onClick={() => navigate(`/research/reports/${r.id}`)}
               >
                 <span className="date">{r.d.replace(" ", "·")}</span>
                 <span className="title">
@@ -495,7 +495,7 @@ export default function Reader() {
           <a
             className="foot-nav"
             title={`Previous report in ${sectorLabel}`}
-            onClick={() => navigate(`/reports/${prev.id}`)}
+            onClick={() => navigate(`/research/reports/${prev.id}`)}
           >
             <span className="arr">←</span>
             <span className="tick">{prev.tickers[0] ?? "—"}</span>
@@ -506,7 +506,7 @@ export default function Reader() {
           <a
             className="foot-nav"
             title={`Next report in ${sectorLabel}`}
-            onClick={() => navigate(`/reports/${next.id}`)}
+            onClick={() => navigate(`/research/reports/${next.id}`)}
           >
             <span className="tick">{next.tickers[0] ?? "—"}</span>
             <span>{next.title}</span>
