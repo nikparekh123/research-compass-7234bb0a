@@ -201,6 +201,17 @@ export async function fetchReportHtml(file_path: string | null): Promise<string>
   return data.text();
 }
 
+export async function fetchReportById(id: string): Promise<ReportRow | null> {
+  const { data, error } = await supabase.from("reports").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data ? dbToReport(data as DbReport) : null;
+}
+
+export async function setReportStar(id: string, starred: boolean): Promise<void> {
+  const { error } = await supabase.from("reports").update({ starred }).eq("id", id);
+  if (error) throw error;
+}
+
 export async function fetchReports(): Promise<ReportRow[]> {
   const { data, error } = await supabase
     .from("reports")
