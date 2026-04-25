@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { sendMagicLink, getCurrentSession } from "@/lib/auth";
+import { sendMagicLink, getCurrentSession, checkMemberEmail } from "@/lib/auth";
 
 function useNow() {
   const [now, setNow] = useState(new Date());
@@ -20,11 +20,13 @@ function formatClock(date: Date, offsetHours: number) {
 }
 
 type Stage = "idle" | "sending" | "sent" | "error";
+type Recognized = "unknown" | "checking" | "yes" | "no";
 
 export default function Landing() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [email, setEmail] = useState("");
+  const [recognized, setRecognized] = useState<Recognized>("unknown");
   const [stage, setStage] = useState<Stage>("idle");
   const [msg, setMsg] = useState<string | null>(() => {
     if (params.get("denied") === "1") return "That email isn't on the allowlist. Ask Niket for access.";
@@ -38,6 +40,20 @@ export default function Landing() {
   useEffect(() => {
     getCurrentSession().then((s) => { if (s?.user) navigate("/dashboard", { replace: true }); });
   }, [navigate]);
+
+  // Debounced allowlist probe as the user types.
+  useEffect(() => {
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed) { setRecognized("unknown"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) { setRecognized("unknown"); return; }
+    setRecognized("checking");
+    let cancelled = false;
+    const t = window.setTimeout(async () => {
+      const ok = await checkMemberEmail(trimmed);
+      if (!cancelled) setRecognized(ok ? "yes" : "no");
+    }, 350);
+    return () => { cancelled = true; window.clearTimeout(t); };
+  }, [email]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,21 +97,30 @@ export default function Landing() {
           <form className="signin" onSubmit={onSubmit}>
             <label className="signin-label">Sign in</label>
             <div className="signin-row">
-              <input
-                className="signin-input"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                placeholder="you@sunnyfi.co"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={stage === "sending" || stage === "sent"}
-                required
-              />
+              <div className="signin-input-wrap" data-state={recognized}>
+                <input
+                  className="signin-input"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="you@sunnyfi.co"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={stage === "sending" || stage === "sent"}
+                  required
+                />
+                <span className="signin-mark" aria-hidden>
+                  {recognized === "yes" && "✓"}
+                  {recognized === "no"  && "✕"}
+                </span>
+              </div>
               <button
                 className="signin-btn"
                 type="submit"
-                disabled={stage === "sending" || stage === "sent" || !email.trim()}
+                disabled={
+                  stage === "sending" || stage === "sent" ||
+                  !email.trim() || recognized !== "yes"
+                }
               >
                 {stage === "sending" ? "Sending…" : stage === "sent" ? "Sent ↵" : "Send link ↵"}
               </button>
@@ -103,7 +128,13 @@ export default function Landing() {
             <div className="signin-hint">
               {msg
                 ? msg
-                : "We'll email you a one-tap sign-in link."}
+                : recognized === "no"
+                  ? "That email isn't on the allowlist. Ask Niket for access."
+                  : recognized === "checking"
+                    ? "Checking…"
+                    : recognized === "yes"
+                      ? "Recognized — send yourself a sign-in link."
+                      : "We'll email you a one-tap sign-in link."}
             </div>
           </form>
         </div>

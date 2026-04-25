@@ -911,17 +911,33 @@ button:focus-visible { outline: 1.5px solid var(--navi-neon); outline-offset: 2p
   gap: 8px;
   justify-content: flex-end;
 }
+.signin-input-wrap {
+  flex: 1; min-width: 0;
+  position: relative;
+  display: flex; align-items: center;
+  border-bottom: 1.5px solid var(--neon-text-on-neon);
+  transition: border-color .15s var(--navi-ease);
+}
+.signin-input-wrap[data-state="no"]  { border-bottom-color: var(--navi-negative); }
+.signin-input-wrap[data-state="yes"] { border-bottom-color: var(--neon-text-on-neon); }
+.signin-mark {
+  position: absolute; right: 0;
+  font-family: var(--navi-font-sans);
+  font-size: 16px; line-height: 1;
+  pointer-events: none;
+  color: var(--neon-text-on-neon);
+}
+.signin-input-wrap[data-state="no"] .signin-mark { color: var(--navi-negative); }
 .signin-input {
   flex: 1;
   min-width: 0;
   border: none;
-  border-bottom: 1.5px solid var(--neon-text-on-neon);
   background: transparent;
   font-family: var(--navi-font-sans);
   font-size: 16px; font-weight: 500;
   color: var(--neon-text-on-neon);
   caret-color: var(--neon-text-on-neon);
-  padding: 6px 0;
+  padding: 6px 24px 6px 0;
   outline: none;
   text-align: left;
   transition: background .15s var(--navi-ease);

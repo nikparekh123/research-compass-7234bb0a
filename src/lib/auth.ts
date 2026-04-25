@@ -33,6 +33,20 @@ export async function sendMagicLink(email: string): Promise<
   }
 }
 
+/** Pre-login check: is this email in the allowlist? Safe to call anon. */
+export async function checkMemberEmail(email: string): Promise<boolean> {
+  const trimmed = email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return false;
+  const { data, error } = await (supabase.rpc as unknown as (
+    name: string,
+    args: { p_email: string },
+  ) => Promise<{ data: boolean | null; error: unknown }>)("is_member", {
+    p_email: trimmed,
+  });
+  if (error) return false;
+  return !!data;
+}
+
 /** Check that the signed-in user's email is in the `members` allowlist. */
 export async function isAllowed(user: User): Promise<boolean> {
   if (!user.email) return false;
